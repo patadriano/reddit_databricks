@@ -119,4 +119,6 @@ The solution enables analysts and business stakeholders to:
 * Named Entity Recognition (NER).
 * Real-time Reddit data ingestion.
 * Automated reporting workflows.
+* <img width="1050" height="819" alt="image" src="https://github.com/user-attachments/assets/2d2d32ac-db2e-424c-a063-bed17ccd761c" />
+
 
