@@ -1,124 +1,87 @@
-# Reddit Beauty Brand Analytics Pipeline
+# 💄 Reddit Beauty Brand Analytics Pipeline
 
-## Overview
+##  Overview
+This project analyzes beauty-related discussions on Reddit to identify brand mentions, category trends, sentiment patterns, and consumer preferences. Using **Databricks** and **Apache Spark**, the pipeline processes raw Reddit posts and comments, transforms unstructured text into structured datasets, and exports the data to enable visualization dashboards in **Power BI**.
 
-This project analyzes beauty-related discussions on Reddit to identify brand mentions, category trends, sentiment patterns, and consumer preferences. The pipeline leverages Databricks and Apache Spark to process large volumes of Reddit posts and comments, transforming unstructured social media data into actionable business insights.
+---
 
-## Objectives
+##  Objectives
+* **Data Collection:** Ingest beauty-related discussions from Reddit subreddit r/beautytalkph using the official Reddit API.
+* **Scalable Processing:** Store and process massive volumes of posts and comments in Databricks using Apache Spark.
+* **Entity Extraction:** Automatically identify beauty brands, product categories, and social media platforms from unstructured text.
+* **Data Transformation:** Normalize and transform unstructured text into structured, sentence-level analytical datasets.
+* **Business Intelligence:** Build an interactive Power BI dashboard for visualization of data.
 
-* Extract beauty-related discussions from Reddit.
-* Identify beauty brand mentions within posts and comments.
-* Categorize brands by product category.
-* Analyze brand mention trends over time.
-* Measure consumer sentiment toward brands and categories.
-* Create dashboards and visualizations for reporting.
 
-## Technology Stack
+---
 
-* Databricks
-* Apache Spark (PySpark)
-* Python
-* SQL
-* Delta Lake
-* Power BI
-* Reddit Data Sources
+##  Technology Stack
+* **Data Ingestion:** Python, Reddit API (PRAW)
+* **Processing & Compute:** Databricks, Apache Spark (PySpark)
+* **Storage & Management:** Delta Lake, Spark SQL
+* **Visualization:** Power BI
 
-## Data Pipeline
+---
+
+## 🔄 Data Pipeline Architecture
 
 ### 1. Data Ingestion
+Data is extracted from the `r/beautytalkph` subreddit via the Reddit API (PRAW) and ingested directly into two raw Delta Lake tables:
 
-* Import Reddit posts and comments from source datasets.
-* Store raw data in Delta tables.
+* **Posts Table:** `post_id`, `post_content`, `created_date`, `number_of_comments`, `number_of_upvotes`
+* **Comments Table:** `comment_id`, `post_id`, `comment_body`, `created_date`, `comment_upvotes`
 
-### 2. Data Cleaning
+### 2. Entity Detection & NLP
+* **Brand & Category Mapping:** Scans text for brand names and product categories using predefined lookup dictionaries.
+* **Platform Tracking:** Detects mentions of other social media networks (e.g., TikTok, Instagram).
+* **Sentiment Analysis:** Performs sentence-level sentiment classification to evaluate consumer perception (Positive, Neutral, Negative).
 
-* Remove duplicates.
-* Normalize text formatting.
-* Handle missing values.
-* Filter non-English and irrelevant content.
+### 3. Data Transformation & Normalization
+To prevent analytical bias and handle multi-entity text, the unstructured data undergoes the following transformations:
+1.  **Tokenization:** Splits long posts and comments into individual sentences.
+2.  **Explode Operations:** Explodes arrays of detected brands, categories, and platforms into separate rows to normalize the data (1 mention per row).
 
-### 3. Text Processing
+### 4. Analytics & Aggregations
+The final data is used to analyze:
+* **Top Mentioned Brands, Categories, and Platforms:** See which ones get talked about the most.
+* **Yearly Trends:** Track how mentions change over the years.
+* **Sentiment Analysis:** See if people are saying positive, neutral, or negative things about specific brands, categories, or platforms.
 
-* Split posts into sentences.
-* Clean special characters and URLs.
-* Standardize brand names.
+---
+### Table Schemas
 
-### 4. Brand Detection
+#### 1. Posts Table
+| Column Name | Data Type | Description |
+| :--- | :--- | :--- |
+| `post_id` | `STRING` (PK) | Unique Reddit post identifier |
+| `post_content`| `STRING` | Raw text body of the post |
+| `created_date`| `TIMESTAMP` | Date and time the post was created |
+| `number_of_comments` | `INT` | Total comment count |
+| `number_of_upvotes` | `INT` | Total upvote count |
 
-* Match text against predefined beauty brand dictionaries.
-* Extract brand mentions from posts and comments.
-* Store brand-level observations.
+#### 2. Comments Table
+| Column Name | Data Type | Description |
+| :--- | :--- | :--- |
+| `comment_id` | `STRING` (PK) | Unique Reddit comment identifier |
+| `post_id` | `STRING` (FK) | Reference to the parent post identifier |
+| `comment_body`| `STRING` | Raw text body of the comment |
+| `created_date`| `TIMESTAMP` | Date and time the comment was created |
+| `comment_upvotes` | `INT` | Total comment upvote count |
 
-### 5. Category Classification
+#### 3. Sentence-Level Table (Analytical Output)
+| Column Name | Data Type | Description |
+| :--- | :--- | :--- |
+| `sentence` | `STRING` | The extracted individual sentence text |
+| `post_id` | `STRING` (FK) | Source post identifier |
+| `comment_id` | `STRING` (FK) | Source comment identifier (NULL if from a post) |
+| `brand_found` | `STRING` | Detected beauty brand name |
+| `category_mentioned` | `STRING` | Detected product category (e.g., Skincare, Makeup) |
+| `platform_mentioned` | `STRING` | Detected social media platforms (e.g., TikTok) |
+| `sentiment` | `STRING` / `FLOAT` | Sentiment classification label |
+| `date` | `DATE` |  Date and time the post was created |
 
-* Assign brands to beauty categories such as:
+---
 
-  * Makeup
-  * Skincare
-  * Fragrance
-  * Haircare
-  * Body Care
+## 📊 Power BI Dashboard
 
-### 6. Analytics
-
-* Brand mention frequency
-* Top-mentioned brands
-* Category popularity
-* Monthly and yearly trends
-* Sentiment analysis
-
-## Data Model
-
-### Posts Table
-
-| Column       | Description                   |
-| ------------ | ----------------------------- |
-| post_id      | Unique Reddit post identifier |
-| post_content | Reddit post text              |
-| created_date | Post creation date            |
-
-### Brand Mentions Table
-
-| Column   | Description                |
-| -------- | -------------------------- |
-| post_id  | Associated post identifier |
-| brand    | Detected beauty brand      |
-| category | Beauty category            |
-
-## Sample Metrics
-
-* Total Brand Mentions
-* Unique Brands Mentioned
-* Top Mentioned Brand
-* Mentions by Category
-* Mentions Over Time
-* Sentiment Distribution
-
-## Dashboard Features
-
-* Brand mention trend analysis
-* Category comparison
-* Top brands ranking
-* Year-over-year growth
-* Interactive filtering by category and date
-
-## Key Insights
-
-The solution enables analysts and business stakeholders to:
-
-* Monitor brand visibility on Reddit.
-* Identify emerging beauty trends.
-* Understand consumer discussions and preferences.
-* Compare brand performance across categories.
-* Support marketing and product strategy decisions.
-
-## Future Enhancements
-
-* Advanced sentiment analysis using NLP models.
-* Topic modeling and trend detection.
-* Named Entity Recognition (NER).
-* Real-time Reddit data ingestion.
-* Automated reporting workflows.
-* <img width="1050" height="819" alt="image" src="https://github.com/user-attachments/assets/2d2d32ac-db2e-424c-a063-bed17ccd761c" />
-
-
+<img width="1054" height="819" alt="image" src="https://github.com/user-attachments/assets/b2d6cd63-5e84-4c05-91f0-3eaa70e620ef" />
